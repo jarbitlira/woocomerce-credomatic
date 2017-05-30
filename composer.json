@@ -1,0 +1,14 @@
+{
+  "name": "jarbitlira/wc-credomatic-gateway",
+  "description": "woocommerce integration with credomatic",
+  "type": "library",
+  "require": {
+    "jarbitlira/credomatic-gateway": "dev-master"
+  },
+  "authors": [
+    {
+      "name": "Jarbit Lira",
+      "email": "dev@jarbitlira.com"
+    }
+  ]
+}
