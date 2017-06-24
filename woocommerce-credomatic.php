@@ -13,7 +13,7 @@
  * Check if WooCommerce is active
  **/
 
-//require_once "vendor/autoload.php";
+require_once "vendor/autoload.php";
 require_once "includes/class-credomatic-gateway.php";
 
 /**
@@ -29,7 +29,7 @@ class Credomatic_Gateway_Integration extends Credomatic_Gateway
     public function __construct()
     {
         add_action('plugins_loaded', array($this, 'init'));
-        parent::__construct();
+        parent::__construct($this);
     }
 
     /**
