@@ -39,14 +39,14 @@ class Credomatic_Gateway extends WC_Payment_Gateway_CC
         $this->web_service_url = empty(trim($this->get_option('webservice_url'))) ? null
             : $this->get_option('webservice_url');
 
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-
-
         $this->credomaticClient = new CredomaticClient($this->user_name,
             $this->private_key,
             $this->public_key,
             $this->web_service_url
         );
+
+        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+//        add_action('woocommerce_checkout_process', array($this, 'validate_fields'));
     }
 
     /**
@@ -108,15 +108,11 @@ class Credomatic_Gateway extends WC_Payment_Gateway_CC
 
         $order = wc_get_order($order_id);
 
-//        var_dump($order);die;
-
-//        WC_DAt
-
         $this->credomaticClient->processPayment($order_id, $order->get_total(), $ccNumber, $cvv, $ccexp);
 
-        if (!$this->credomaticClient->succeeded()) {
+        $result = $this->credomaticClient->getResult();
 
-            $result = $this->credomaticClient->getResult();
+        if ($this->credomaticClient->succeeded()) {
 
             $order->payment_complete($result['transaction_id']);
 
@@ -126,7 +122,6 @@ class Credomatic_Gateway extends WC_Payment_Gateway_CC
             // Remove cart
             WC()->cart->empty_cart();
 
-
             return array(
                 'result' => 'success',
                 'redirect' => $this->get_return_url($order)
@@ -135,8 +130,28 @@ class Credomatic_Gateway extends WC_Payment_Gateway_CC
 
         return array(
             'result' => 'fail',
-            'redirect' => $this->get_return_url($order)
         );
+    }
+
+    public function validate_fields()
+    {
+        $data = $this->get_post_data();
+        $valid = true;
+        // Handle required fields
+        $required_fields = array(
+            'card-number' => __('Card number', 'woocommerce'),
+            'card-expiry' => __('Expiry (MM/YY)', 'woocommerce'),
+            'card-cvc' => __('Card code', 'woocommerce'),
+        );
+
+        foreach ($required_fields as $field_key => $field_name) {
+            if (empty($data[$this->id . '-' . $field_key])) {
+                wc_add_notice(sprintf(__('%s is a required field.', 'woocommerce'), '<strong>' . esc_html($field_name) . '</strong>'), 'error');
+                $valid = false;
+            }
+        }
+
+        return $valid;
     }
 
 }
